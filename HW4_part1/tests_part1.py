@@ -50,7 +50,12 @@ class HW4Sampletests_part1(unittest.TestCase):
         self.psstacks.dictPush({})
         self.psstacks.define("/n1", 6)
         self.assertEqual(self.psstacks.lookup("n1"),6)
-        self.assertEqual(self.psstacks.lookup("n2"),7)    
+        self.assertEqual(self.psstacks.lookup("n2"),7)
+
+    def test_define4(self):
+        self.psstacks.dictPush({})
+        self.psstacks.define("/FrankOcean", "GOAT")
+        self.assertEqual(self.psstacks.lookup("FrankOcean"),"GOAT")            
     #-----------------------------------------------------
     #Arithmatic operator tests
     def test_add(self):
@@ -157,7 +162,20 @@ class HW4Sampletests_part1(unittest.TestCase):
         self.psstacks.length()
         self.assertEqual(self.psstacks.opPop(),7)      
         self.assertTrue(len(self.psstacks.opstack)==0) 
-        #length will not push back the string onto the opstack      
+        #length will not push back the string onto the opstack    
+        # 
+
+    def test_length_StrConstant(self):
+        self.psstacks.opPush(StrConstant('(hello)'))
+        self.psstacks.length()
+        self.assertEqual(self.psstacks.opPop(),5)      
+        self.assertTrue(len(self.psstacks.opstack)==0) 
+    
+    def test_length_ArrayConstant(self):
+        self.psstacks.opPush(ArrayConstant([1,2,3]))
+        self.psstacks.length()
+        self.assertEqual(self.psstacks.opPop(),3)
+        self.assertTrue(len(self.psstacks.opstack)==0)
 
     def test_get_StrConstant(self):
         #(CptS355) 3 get
@@ -168,12 +186,30 @@ class HW4Sampletests_part1(unittest.TestCase):
         self.assertTrue(len(self.psstacks.opstack)==0)
         #get will not push back the string onto the opstack   
 
+    def test_get_StrConstant2(self):
+        #(FrankieOcean) 1 get
+        self.psstacks.opPush(StrConstant('(FrankieOcean)'))
+        self.psstacks.opPush(1)
+        self.psstacks.get()
+        self.assertEqual(self.psstacks.opPop(),114)
+        self.assertTrue(len(self.psstacks.opstack)==0)
+        #get will not push back the string onto the opstack  
+
     def test_get_ArrayConstant(self):
         #[0,1,2,100,4] 3 get
         self.psstacks.opPush(ArrayConstant([0,1,2,100,4]))
         self.psstacks.opPush(3)
         self.psstacks.get()
         self.assertEqual(self.psstacks.opPop(),100)
+        self.assertTrue(len(self.psstacks.opstack)==0)
+        #get will not push back the string onto the opstack 
+    
+    def test_get_ArrayConstant2(self):
+        #[1,2,3,4,5,6] 3 get
+        self.psstacks.opPush(ArrayConstant([1,2,3,4,5,6]))
+        self.psstacks.opPush(3)
+        self.psstacks.get()
+        self.assertEqual(self.psstacks.opPop(),4)
         self.assertTrue(len(self.psstacks.opstack)==0)
         #get will not push back the string onto the opstack 
 
@@ -204,6 +240,19 @@ class HW4Sampletests_part1(unittest.TestCase):
         str2 = self.psstacks.opPop()
         self.assertTrue(str2 is str1)  #we pop the string reference we saved in x; check if it the same object
         self.assertEqual(str2.value,'(CptS322)')  #we check if the StrConstant object value is updated
+        self.assertTrue(len(self.psstacks.opstack)==0)
+
+    def test_put_StrConstant3(self):
+        #(809s) dup 2 56 put 
+        str1 = StrConstant('(809s)')
+        self.psstacks.opPush(str1)
+        self.psstacks.dup()  #duplicating the string reference
+        self.psstacks.opPush(2)
+        self.psstacks.opPush(56)  # ascii value for '3'
+        self.psstacks.put()  #put will not push back the changed string onto the opstack 
+        str2 = self.psstacks.opPop()
+        self.assertTrue(str2 is str1)  #we pop the string reference we copied with "dup"; check if it the same object
+        self.assertEqual(str2.value,'(808s)')  #we check if the StrConstant object value is updated
         self.assertTrue(len(self.psstacks.opstack)==0)
 
     def test_put_ArrayConstant1(self):
@@ -241,6 +290,23 @@ class HW4Sampletests_part1(unittest.TestCase):
         arr2 = self.psstacks.opPop()
         self.assertTrue(arr2 is arr1)  #we pop the array reference ; check if it the same object
         self.assertEqual(arr2.value,[1,3,1])  # we check if the ArrConstant object value is updated
+        self.assertTrue(len(self.psstacks.opstack)==0)
+
+    def test_put_ArrayConstant3(self):
+        #/x [1,1,1] def x 1 3 put x 
+        #/x [10,1,30] def x 1 20 put x
+        arr1 = ArrayConstant([10,1,30])
+        self.psstacks.opPush('/x')
+        self.psstacks.opPush(arr1)
+        self.psstacks.psDef()  #defines x; x holds the array reference
+        self.psstacks.opPush(self.psstacks.lookup('x'))  # pushed the array reference x holds onto the stack
+        self.psstacks.opPush(1)
+        self.psstacks.opPush(20)  # the item at index 1 will be replaced by 20
+        self.psstacks.put()  #put will not push back the changed array onto the opstack 
+        self.psstacks.opPush(self.psstacks.lookup('x'))  # pushed the array reference x holds onto the stack
+        arr2 = self.psstacks.opPop()
+        self.assertTrue(arr2 is arr1)  #we pop the array reference ; check if it the same object
+        self.assertEqual(arr2.value,[10,20,30])  # we check if the ArrConstant object value is updated
         self.assertTrue(len(self.psstacks.opstack)==0)
 
 
@@ -290,6 +356,22 @@ class HW4Sampletests_part1(unittest.TestCase):
         self.psstacks.psDef()
         self.psstacks.end() 
         self.assertEqual(self.psstacks.lookup('x'),3)
+
+    def test_beginEnd2(self):
+        #/y "hello" def 1 dict begin /y "world" def end y
+        self.psstacks.opPush(1)
+        self.psstacks.psDict()
+        self.psstacks.opPush("/y")
+        self.psstacks.opPush("hello")
+        self.psstacks.psDef()
+        self.psstacks.opPush(1)
+        self.psstacks.psDict()
+        self.psstacks.begin()
+        self.psstacks.opPush("/y")
+        self.psstacks.opPush("world")
+        self.psstacks.psDef()
+        self.psstacks.end() 
+        self.assertEqual(self.psstacks.lookup('y'),"hello")
 
     def test_psDef3(self):
         #/x 3 def 1 dict begin /x 30 def 1 dict begin /x 300 def end x
