@@ -110,13 +110,42 @@ def read_expr(src):
         raise SyntaxError('Incomplete expression')
     # TO-DO  - complete the following; include each condition as an `elif` case.
     #   if the token is a literal return a `Literal` object having `value` token.
-    #   if the token is a string delimiter (i.e., '('), get all tokens until the matching ')' delimiter and combine them as a Python string; 
+    elif is_literal(token):
+        return Literal(token)
+    #   if the token is a string delimiter (i.e., '('), get all tokens until the matching ')' delimiter and combine them as a Python string;
     #       create a StringExpr object having this string value. 
-    #   if the token is a name, create a Name object having `var_name` token. 
+    elif token == "(":
+        result = ""
+        src.pop_first()
+        while src.current != ")":
+            if src.current() is None:
+                raise SyntaxError("String doesn't have a matching `)`!")
+            result += src.pop_first()
+        return StringExpr(result)
+    #   if the token is a name, create a Name object having `var_name` token.
+    elif is_name(token):
+        return Name(token)
     #   if the token is an array delimiter (i.e., '['), get all tokens until the matching ']' delimiter and combine them as a Python list; 
-    #       create a ArrayExpr object having this list value. 
+    #       create a ArrayExpr object having this list value.
+    elif token == "[":
+        result = []
+        src.pop_first()
+        while src.current != "]":
+            if src.current is None:
+                raise SyntaxError("array doesn't have a mathcing ']'!")
+            result.append(src.pop_first())
+        return ArrayExpr(result)
     #   if the token is a code-array delimiter (i.e., '{'), get all tokens until the matching '}' delimiter and combine them as a Python list; 
-    #       create a CodeArray object having this list value.       
+    #       create a CodeArray object having this list value.
+    elif token == "{":
+        result = []
+        src.pop_first()
+        while src.current != "}":
+            if src.current is None:
+                raise SyntaxError("code-array doesn't have a matching '}'!")
+            result.append(src.pop_first())
+        return CodeArray(result)
+
     else:
         raise SyntaxError("'{}' is not the start of an expression".format(token))
   
