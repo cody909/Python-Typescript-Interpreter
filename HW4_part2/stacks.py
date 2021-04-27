@@ -9,6 +9,9 @@ class Stacks:
         
         #The builtin operators supported by our interpreter
         self.builtin_operators = {
+            'add': self.add,
+            'sub': self.sub
+
              #TO-DO in part1
         }
     #-------  Operand Stack Operators --------------
