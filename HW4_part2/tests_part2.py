@@ -247,7 +247,90 @@ class HW4GradingTests(unittest.TestCase):
             self.assertTrue(self.compareObjectData(self.psstacks.opstack[i], opstackOutput[i]))
         #dictstackOutput =  [{'/arr1': ArrayConstant([49, 50, 51, 52, 100, 54]), '/str1': StrConstant('(1234d)')}]
 
+    def test_input12(self):
+        testinput12 = """
+            /x 111 def
+            x
+            5 dict begin
+            /x 222 def
+            x
+            end
+            x
+        """
+        opstackOutput = [111, 222, 111]
+        expr_list = read(testinput12)
+        for expr in expr_list:
+            expr.eval(self.psstacks)
+        self.assertEqual(len(self.psstacks.opstack),len(opstackOutput))
+        for i in range(0,len(opstackOutput)):
+            self.assertTrue(self.compareObjectData(self.psstacks.opstack[i], opstackOutput[i]))
 
+    def test_input13(self):
+        testinput13 = """
+            /x 4 def
+            x 3 eq
+            {x 1 add /result exch def}
+            {x 4 eq {x 2 add /result exch def} {x 3 add /result exch def}
+            ifelse }
+            ifelse
+            result
+        """
+        opstackOutput = [6]
+        expr_list = read(testinput13)
+        for expr in expr_list:
+            expr.eval(self.psstacks)
+        self.assertEqual(len(self.psstacks.opstack),len(opstackOutput))
+        for i in range(0,len(opstackOutput)):
+            self.assertTrue(self.compareObjectData(self.psstacks.opstack[i], opstackOutput[i]))
+
+    def test_input14(self):
+        testinput14 = """
+            1 1 3 {10 mul} for
+            1 1 5 {dup} for
+        """
+        opstackOutput = [10,20,30,1,1,2,2,3,3,4,4,5,5]
+        expr_list = read(testinput14)
+        for expr in expr_list:
+            expr.eval(self.psstacks)
+        self.assertEqual(len(self.psstacks.opstack),len(opstackOutput))
+        for i in range(0,len(opstackOutput)):
+            self.assertTrue(self.compareObjectData(self.psstacks.opstack[i], opstackOutput[i]))
+    
+    def test_input15(self):
+        testinput15 = """
+            /myArray [0 1 2] def
+            myArray
+            dup
+            myArray 1 10 put
+            2 get
+        """
+
+        opstackOutput = [ArrayConstant([0, 10, 2]),2]
+        expr_list = read(testinput15)
+        for expr in expr_list:
+            expr.eval(self.psstacks)
+        self.assertEqual(len(self.psstacks.opstack),len(opstackOutput))
+        for i in range(0,len(opstackOutput)):
+            self.assertTrue(self.compareObjectData(self.psstacks.opstack[i], opstackOutput[i]))
+
+    def test_input16(self):
+        testinput16 = """
+            /trueStatement (frank is the goat) def
+            /lies (frank is not the goat) def
+            2 1 gt
+            { trueStatement }
+            { lies }
+            ifelse
+        """
+
+        opstackOutput = [StrConstant('(frank is the goat)')]
+        expr_list = read(testinput16)
+        for expr in expr_list:
+            expr.eval(self.psstacks)
+        self.assertEqual(len(self.psstacks.opstack),len(opstackOutput))
+        for i in range(0,len(opstackOutput)):
+            self.assertTrue(self.compareObjectData(self.psstacks.opstack[i], opstackOutput[i]))
+        
 if __name__ == '__main__':
     unittest.main()
 

@@ -10,8 +10,28 @@ class Stacks:
         #The builtin operators supported by our interpreter
         self.builtin_operators = {
             'add': self.add,
-            'sub': self.sub
-
+            'sub': self.sub,
+            'mul': self.mul,
+            'eq': self.eq,
+            'lt': self.lt,
+            'gt': self.gt,
+            'length': self.length,
+            'get': self.get,
+            'put': self.put,
+            'dup': self.dup,
+            'exch': self.exch,
+            'pop': self.pop,
+            'copy': self.copy,
+            'count': self.count,
+            'clear': self.clear,
+            'stack': self.stack,
+            'dict': self.psDict,
+            'begin': self.begin,
+            'end': self.end,
+            'def': self.psDef,
+            'if': self.psIf,
+            'ifelse': self.psIfelse,
+            'for': self.psFor
              #TO-DO in part1
         }
     #-------  Operand Stack Operators --------------
@@ -216,19 +236,34 @@ class Stacks:
             
     #------- Stack Manipulation and Print Operators --------------
 
+    def top(self):
+        return self.opstack[-1]
+
+    def push(self, val):
+        self.opPush(val)
+
     """
        This function implements the Postscript "pop operator". Calls self.opPop() to pop the top value from the opstack and discards the value. 
     """
-    def pop (self):
+    def pop(self):
         return self.opPop()
 
     """
        Prints the opstack. The end of the list is the top of the stack. 
     """
     def stack(self):
-        print("opstack")
-        for item in self.opstack:
-            print(item + " ")
+        print("opstack:")
+        print("--------------------------")
+        reversedstack = self.opstack[::-1]
+        for item in reversedstack:
+            print(item)
+        print("--------------------------")
+
+        print("dictstack")
+        print("--------------------------")
+        for item in self.dictstack:
+            print(item)
+        print("--------------------------")
 
     """
        Copies the top element in opstack.
@@ -315,8 +350,10 @@ class Stacks:
        If the condition is True, evaluates the `ifbody`.  
     """
     def psIf(self):
-        pass
-        # TO-DO in part2
+        ifbody = self.pop()
+
+        if self.pop():
+            ifbody.apply(self)
 
     """
        Implements ifelse operator. 
@@ -324,8 +361,13 @@ class Stacks:
        If the condition is True, evaluate `ifbody`, otherwise evaluate `elsebody`. 
     """
     def psIfelse(self):
-        pass
-        # TO-DO in part2
+        elsebody = self.pop()
+        ifbody = self.pop()
+
+        if self.pop() == True:
+            ifbody.apply(self)
+        else:
+            elsebody.apply(self)
 
 
     #------- Loop Operators --------------
@@ -336,10 +378,32 @@ class Stacks:
        for each value of loop counter, push the counter value on opstack, and  evaluate the `loopbody`. 
     """   
     def psFor(self):
-        pass
-        # TO-DO in part2
+        loopbody = self.pop()
+        end = self.pop()
+        increment = self.pop()
+        start = self.pop()
+
+        if increment > 0 and start <= end:
+            for i in range(start, end + 1, increment):
+                self.push(i)
+                loopbody.apply(self)
+
+        elif increment < 0 and start > end:
+            for i in range(start, end - 1, increment):
+                self.push(i)
+                loopbody.apply(self)
+        
+            # elif increment < 0 and start > end
+
+  
+
 
     #--- used in the setup of unittests 
     def clearBoth(self):
         self.opstack[:] = []
         self.dictstack[:] = []
+
+    def cleanTop(self):
+        if len(self.opstack)>1:
+            if self.opstack[-1] is None:
+                self.opstack.pop()

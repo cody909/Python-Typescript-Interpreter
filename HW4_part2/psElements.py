@@ -49,8 +49,7 @@ class Literal(Expr):
         self.value = value
 
     def eval(self, psstacks):
-        "TO-DO (part2)"
-        pass
+        psstacks.push(self.value)
 
     def __str__(self):
         return str(self.value)
@@ -65,8 +64,7 @@ class StringExpr(Expr):
         self.value = value
 
     def eval(self, psstacks):
-        "TO-DO (part2)"
-        pass
+        psstacks.push(StrConstant(self.value))
 
     def __str__(self):
         return str(self.value)
@@ -84,16 +82,29 @@ class ArrayExpr(Expr):
 
     #needs to be updated
     def eval(self,psstacks):
-        "TO-DO (part2)"
-        pass
+        psstacks.push("-mark-")
+        for item in self.value:
+            item.eval(psstacks)
+        evaluated_array = []
+        while psstacks.top() != "-mark-":
+            evaluated_array.append(psstacks.pop())
+        psstacks.pop()
+        psstacks.push(ArrayConstant(list(reversed(evaluated_array))))
+
+        
 
     def __str__(self):
         return str(self.value)
 
 class Name(Expr):
     """A `Name` is a variable , a built-in operator, or a function. 
-        a.	If the `Name` represents a name constant (i.e., its `var_name` attribute starts with a `/`), it will be evaluated to a Python string having value `var_name` . The evaluated value will be pushed onto the opstack.
-        b.	If the `Name` represents a built-in operator (i.e., its `var_name` attribute is one of the built-in operator names),  then we will evaluate it by executing the operator function defined in stacks.py in the current environment (opstack). 
+        a.	If the `Name` represents a name constant (i.e., its `var_name` attribute starts with a `/`), 
+        it will be evaluated to a Python string having value `var_name` . 
+        The evaluated value will be pushed onto the opstack. 
+        
+        b.	If the `Name` represents a built-in operator (i.e., its `var_name` attribute is one of the built-in operator names),  
+        then we will evaluate it by executing the operator function defined in stacks.py in the current environment (opstack). 
+        
         c.	If the `Name` represents a variable or function, interpreter looks up the value of the variable in the current environment (dictstack).
             i.	If the variable value is a function (`FunctionBody`), it should be applied (i.e., executed) by calling its `apply` method.  
             ii.	Otherwise, the variable value is a constant and it should be pushed onto the opstack. 
@@ -105,15 +116,28 @@ class Name(Expr):
         self.var_name = var_name
 
     def eval(self,psstacks):
-        "TO-DO (part2)"
-        pass     
+        if self.var_name[0] == '/':
+            psstacks.push(str(self.var_name))
+        
+        elif psstacks.builtin_operators.get(self.var_name):
+            psstacks.builtin_operators[self.var_name]()
+
+        else:
+            value = psstacks.lookup(self.var_name)
+
+            if isinstance(value, FunctionBody):
+                value.apply(psstacks)
+            else:
+                psstacks.push(value)
 
     def __str__(self):
         return str(self.var_name)
 
 class CodeArray(Expr):
     """A `CodeArray` is notation for representing a code block in PostScript, i.e., a function body, `if` block, `ifelse` block, or `for` loop block. 
-    In our interpreter, `CodeArray` object is evaluated to `FunctionBody` value.  For example: a `CodeArray` with `value`  attribute [Name(dup), Name(mul)] will be evaluated to `FunctionBody` with the same `value`  (i.e., [Name(dup), Name(mul)]. The evaluated `FunctionBody` is pushed onto the stack. 
+    In our interpreter, `CodeArray` object is evaluated to `FunctionBody` value.  
+    For example: a `CodeArray` with `value`  attribute [Name(dup), Name(mul)] will be evaluated to `FunctionBody` with the same `value`  (i.e., [Name(dup), Name(mul)]. 
+    The evaluated `FunctionBody` is pushed onto the stack. 
     The `value` attribute contains the list of tokens in the function body.
     """
     def __init__(self, value):
@@ -121,8 +145,7 @@ class CodeArray(Expr):
         self.value = value
 
     def eval(self, psstacks):
-        "TO-DO (part2)"
-        pass
+        psstacks.push(FunctionBody(self.value))
 
     def __str__(self):
         return str(self.value)
@@ -147,7 +170,7 @@ class Value:
     def __init__(self, value):
         self.value = value
 
-    def apply(self, psstack):
+    def apply(self, psstacks):
         """
         Each subclass of Value implements its own `apply` method.
         Note that only `FunctionBody`s can be "applied"; attempting to apply a StrConstant or ArrayConstant will give an error. 
@@ -215,8 +238,8 @@ class FunctionBody(Value):
         self.body = body
 
     def apply(self, psstacks):
-        # TO-DO in part2
-        pass
+        for expr in self.body:
+            expr.eval(psstacks)
 
     def __str__(self):
         # definition = LambdaExpr(self.parameters, self.body)
