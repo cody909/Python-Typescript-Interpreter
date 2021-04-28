@@ -393,11 +393,6 @@ class Stacks:
                 self.push(i)
                 loopbody.apply(self)
         
-            # elif increment < 0 and start > end
-
-  
-
-
     #--- used in the setup of unittests 
     def clearBoth(self):
         self.opstack[:] = []
